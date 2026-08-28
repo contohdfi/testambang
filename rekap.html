@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rekapitulasi - Tambang Jogosari</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* CSS Khusus untuk Mode Cetak / PDF */
+        @media print {
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            body { background-color: white; }
+            .card { border: none !important; box-shadow: none !important; }
+        }
+        /* Disembunyikan di layar, hanya muncul saat diprint */
+        .print-only { display: none; } 
+    </style>
+</head>
+<body class="bg-light">
+
+    <div class="container mt-4">
+        <!-- HEADER PENGATURAN (Sembunyi saat cetak) -->
+        <div class="no-print d-flex justify-content-between align-items-center mb-4">
+            <h2 class="text-secondary">Laporan & Rekapitulasi</h2>
+            <button class="btn btn-success" onclick="window.print()">🖨️ Cetak / Simpan PDF</button>
+        </div>
+
+        <div class="card shadow-sm mb-4 no-print">
+            <div class="card-body">
+                <form id="formFilter" class="row g-3 align-items-end">
+                    <div class="col-md-3">
+                        <label>Pilih Bulan</label>
+                        <select class="form-select" id="filterBulan">
+                            <option value="01">Januari</option>
+                            <option value="02">Februari</option>
+                            <option value="03">Maret</option>
+                            <option value="04">April</option>
+                            <option value="05">Mei</option>
+                            <option value="06">Juni</option>
+                            <option value="07">Juli</option>
+                            <option value="08" selected>Agustus</option>
+                            <option value="09">September</option>
+                            <option value="10">Oktober</option>
+                            <option value="11">November</option>
+                            <option value="12">Desember</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label>Pilih Tahun</label>
+                        <select class="form-select" id="filterTahun">
+                            <option value="2025">2025</option>
+                            <option value="2026" selected>2026</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-primary w-100" id="btnTampilkan">Tampilkan Data</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- AREA YANG AKAN DICETAK -->
+        <div id="areaCetak" class="bg-white p-4 rounded shadow-sm">
+            
+            <!-- Header Laporan -->
+            <div class="text-center mb-4 print-only">
+                <h4>LAPORAN KEUANGAN BULANAN</h4>
+                <h5>PROYEK TAMBANG JOGOSARI</h5>
+                <p id="labelPeriodeLaporan">Periode: -</p>
+                <hr>
+            </div>
+
+            <!-- Ringkasan Keuangan -->
+            <h5 class="mb-3 text-secondary">A. Ringkasan Keuangan</h5>
+            <div class="row text-center mb-4">
+                <div class="col-md-4 mb-2"><div class="p-3 border rounded bg-light">
+                    <h6>Total Pemasukan</h6><h5 id="rekPemasukan" class="text-success">Rp 0</h5>
+                </div></div>
+                <div class="col-md-4 mb-2"><div class="p-3 border rounded bg-light">
+                    <h6>Total Pengeluaran</h6><h5 id="rekPengeluaran" class="text-danger">Rp 0</h5>
+                </div></div>
+                <div class="col-md-4 mb-2"><div class="p-3 border rounded bg-primary text-white">
+                    <h6>Saldo Akhir</h6><h5 id="rekSaldo">Rp 0</h5>
+                </div></div>
+            </div>
+
+            <div class="row text-center mb-5">
+                <div class="col-md-3 mb-2"><div class="p-2 border rounded">
+                    <small>Total Truk (Rit)</small><br><b id="rekRit">0 Rit</b>
+                </div></div>
+                <div class="col-md-3 mb-2"><div class="p-2 border rounded">
+                    <small>Pemasukan Cash</small><br><b id="rekCash" class="text-success">Rp 0</b>
+                </div></div>
+                <div class="col-md-3 mb-2"><div class="p-2 border rounded">
+                    <small>Pemasukan Transfer</small><br><b id="rekTransfer" class="text-info">Rp 0</b>
+                </div></div>
+                <div class="col-md-3 mb-2"><div class="p-2 border rounded border-warning">
+                    <small>Pembayaran Bon</small><br><b id="rekBon" class="text-warning">Rp 0</b>
+                </div></div>
+            </div>
+
+            <!-- Rekap Material -->
+            <h5 class="mb-3 text-secondary">B. Rincian per Material</h5>
+            <table class="table table-bordered mb-5">
+                <thead class="table-light">
+                    <tr>
+                        <th>Material</th>
+                        <th class="text-center">Jumlah Rit</th>
+                        <th class="text-end">Total Pemasukan</th>
+                    </tr>
+                </thead>
+                <tbody id="tabelMaterial">
+                    <tr><td colspan="3" class="text-center">Belum ada data</td></tr>
+                </tbody>
+            </table>
+
+            <!-- Rekap Harian -->
+            <h5 class="mb-3 text-secondary">C. Rekapitulasi Harian</h5>
+            <table class="table table-bordered table-striped">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Tanggal</th>
+                        <th class="text-center">Ritase</th>
+                        <th class="text-end">Pemasukan</th>
+                        <th class="text-end">Pengeluaran</th>
+                        <th class="text-end">Saldo Harian</th>
+                    </tr>
+                </thead>
+                <tbody id="tabelHarian">
+                    <tr><td colspan="5" class="text-center">Belum ada data</td></tr>
+                </tbody>
+            </table>
+
+        </div>
+    </div>
+
+    <script src="js/rekap.js"></script>
+</body>
+</html>
