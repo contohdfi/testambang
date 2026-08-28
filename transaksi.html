@@ -5,109 +5,110 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Input Transaksi - Tambang Jogosari</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body class="bg-light">
 
-<div class="d-flex">
-    <!-- Sidebar Dummy -->
-    <div class="bg-dark text-white p-3 vh-100 d-none d-md-block" style="width: 250px;">
-        <h4>Jogosari</h4>
-        <hr>
-        <ul class="nav flex-column">
-            <li class="nav-item"><a href="dashboard.html" class="nav-link text-white">Dashboard</a></li>
-            <li class="nav-item"><a href="transaksi.html" class="nav-link text-warning fw-bold">Input Transaksi</a></li>
-            <li class="nav-item"><a href="#" onclick="logout()" class="nav-link text-danger">Logout</a></li>
-        </ul>
-    </div>
+    <div class="container mt-4">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                
+                <h2 class="mb-4 text-secondary">Input Transaksi Baru</h2>
 
-    <!-- Konten Utama -->
-    <div class="container-fluid p-4">
-        <h2 class="mb-4">Input Transaksi Baru</h2>
-        
-        <div class="card shadow-sm mb-4">
-            <div class="card-body">
-                <form id="formTransaksi">
-                    <!-- Pemilihan Jenis Transaksi -->
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Jenis Transaksi</label>
-                        <select class="form-select form-select-lg" id="jenis" name="jenis" required onchange="toggleForm()">
-                            <option value="">-- Pilih Jenis --</option>
-                            <option value="Pemasukan">Pemasukan</option>
-                            <option value="Pengeluaran">Pengeluaran</option>
-                        </select>
-                    </div>
-
-                    <!-- Pilihan Subjenis (Hanya Pemasukan) -->
-                    <div class="mb-3 d-none" id="divSubjenis">
-                        <label class="form-label fw-bold">Kategori Pemasukan</label>
-                        <select class="form-select" id="subjenis" name="subjenis" onchange="toggleForm()">
-                            <option value="Truk Bayar">Pemasukan Truk Bayar</option>
-                            <option value="Pemasukan Biasa">Pemasukan Lainnya / Biasa</option>
-                        </select>
-                    </div>
-
-                    <!-- FORM TRUK BAYAR -->
-                    <div id="formTruk" class="d-none bg-info bg-opacity-10 p-3 rounded mb-3 border border-info">
-                        <h5 class="text-info-emphasis">Data Truk & Material</h5>
-                        <div class="row">
-                            <div class="col-md-6 mb-2">
-                                <label>Nopol Kendaraan</label>
-                                <input type="text" class="form-control text-uppercase" id="nopol" name="nopol">
-                            </div>
-                            <div class="col-md-6 mb-2">
-                                <label>Nama Sopir</label>
-                                <input type="text" class="form-control" id="sopir" name="sopir">
-                            </div>
-                            <div class="col-md-6 mb-2">
-                                <label>Material</label>
-                                <select class="form-select" id="material" name="material">
-                                    <option value="Pasir">Pasir</option>
-                                    <option value="Sirtu">Sirtu</option>
-                                    <option value="Tanah">Tanah</option>
+                <div class="card shadow-sm">
+                    <div class="card-body p-4">
+                        <form id="formTransaksi">
+                            
+                            <!-- 1. PILIH JENIS TRANSAKSI -->
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">Jenis Transaksi <span class="text-danger">*</span></label>
+                                <select class="form-select form-select-lg" id="jenisTransaksi" required>
+                                    <option value="">-- Pilih Jenis Transaksi --</option>
+                                    <option value="Pemasukan">Pemasukan (Uang Masuk)</option>
+                                    <option value="Pengeluaran">Pengeluaran (Biaya/Belanja)</option>
                                 </select>
                             </div>
-                            <div class="col-md-6 mb-2">
-                                <label>Metode Pembayaran</label>
-                                <select class="form-select" id="pembayaran" name="pembayaran">
-                                    <option value="Cash">Cash</option>
-                                    <option value="Transfer">Transfer</option>
-                                    <option value="Bon">Bon (Hutang)</option>
+
+                            <!-- 2. PILIH SUB-JENIS (Muncul jika pilih Pemasukan) -->
+                            <div class="mb-4 d-none" id="wadahSubJenis">
+                                <label class="form-label fw-bold">Kategori Pemasukan <span class="text-danger">*</span></label>
+                                <select class="form-select form-select-lg" id="subJenisTransaksi">
+                                    <option value="">-- Pilih Kategori --</option>
+                                    <option value="Truk Bayar">Pemasukan Truk (Rit)</option>
+                                    <option value="Pemasukan Biasa">Pemasukan Lainnya</option>
                                 </select>
                             </div>
-                        </div>
-                    </div>
 
-                    <!-- FORM UMUM (Rincian & Nominal) -->
-                    <div id="formUmum" class="d-none">
-                        <div class="mb-3">
-                            <label class="form-label">Rincian / Tujuan Transaksi</label>
-                            <input type="text" class="form-control" id="rincian" name="rincian">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-bold text-success">Nominal (Rp)</label>
-                            <input type="number" class="form-control form-control-lg" id="nominal" name="nominal" required>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label>Penanggung Jawab (PJ)</label>
-                                <input type="text" class="form-control" id="pj" name="pj">
+                            <!-- 3. FORM KHUSUS TRUK (Muncul jika pilih Truk Bayar) -->
+                            <div id="wadahFormTruk" class="d-none bg-light p-3 border rounded mb-4">
+                                <h5 class="mb-3 border-bottom pb-2">Data Kendaraan & Material</h5>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Nomor Polisi (Nopol)</label>
+                                        <input type="text" class="form-control" id="nopol" placeholder="Contoh: N 8020 AC">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Nama Sopir</label>
+                                        <input type="text" class="form-control" id="sopir" placeholder="Contoh: Joko">
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Jenis Material</label>
+                                        <select class="form-select" id="material">
+                                            <option value="">-- Pilih Material --</option>
+                                            <option value="Pasir">Pasir</option>
+                                            <option value="Sirtu">Sirtu</option>
+                                            <option value="Tanah">Tanah</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Metode Pembayaran</label>
+                                        <select class="form-select" id="pembayaran">
+                                            <option value="">-- Pilih Metode --</option>
+                                            <option value="Cash">Cash (Tunai)</option>
+                                            <option value="Transfer">Transfer</option>
+                                            <option value="Bon">Bon (Hutang)</option>
+                                        </select>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <label>Keterangan Tambahan</label>
-                                <input type="text" class="form-control" id="keterangan" name="keterangan">
-                            </div>
-                        </div>
-                    </div>
 
-                    <button type="submit" class="btn btn-primary btn-lg w-100 mt-3" id="btnSubmit" disabled>Simpan Transaksi</button>
-                </form>
+                            <!-- 4. FORM UMUM (Rincian & Nominal) -->
+                            <div id="wadahFormUmum" class="d-none">
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Rincian Transaksi <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="rincian" placeholder="Contoh: Beli Solar / Pembayaran Alat Berat" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Nominal (Rp) <span class="text-danger">*</span></label>
+                                    <input type="number" class="form-control form-control-lg" id="nominal" placeholder="Contoh: 500000" min="1" required>
+                                    <small class="text-muted">Tulis angka saja tanpa titik/koma.</small>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Penanggung Jawab <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="pj" placeholder="Nama petugas/penerima" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Keterangan Tambahan (Opsional)</label>
+                                    <textarea class="form-control" id="keterangan" rows="2" placeholder="Catatan tambahan jika ada..."></textarea>
+                                </div>
+
+                                <hr class="my-4">
+                                <button type="submit" class="btn btn-primary btn-lg w-100" id="btnSimpan">
+                                    💾 Simpan Transaksi
+                                </button>
+                            </div>
+
+                        </form>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<script src="js/api.js"></script>
-<script src="js/transaksi.js"></script>
+    <script src="js/transaksi.js"></script>
 </body>
 </html>
