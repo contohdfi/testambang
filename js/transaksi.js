@@ -1,71 +1,129 @@
-// Mengatur tampilan form dinamis
-function toggleForm() {
-    const jenis = document.getElementById("jenis").value;
-    const subjenis = document.getElementById("subjenis").value;
+// Ganti URL ini dengan URL Web App Google Apps Script Anda
+const URL_API = "https://script.google.com/macros/s/AKfycbyXWf7YwOqywAxNb28oS2_fSsfqnd9ooz6pEKs-YKbTnRNBE2_i8X8xUmpbVn-PVxyc/exec";
+
+// 1. MENGATUR FORM DINAMIS (Tampil/Sembunyikan Field)
+const selectJenis = document.getElementById('jenisTransaksi');
+const selectSubJenis = document.getElementById('subJenisTransaksi');
+
+const wadahSubJenis = document.getElementById('wadahSubJenis');
+const wadahFormTruk = document.getElementById('wadahFormTruk');
+const wadahFormUmum = document.getElementById('wadahFormUmum');
+
+// Ketika "Jenis Transaksi" diubah
+selectJenis.addEventListener('change', function() {
+    let jenis = this.value;
     
-    const divSubjenis = document.getElementById("divSubjenis");
-    const formTruk = document.getElementById("formTruk");
-    const formUmum = document.getElementById("formUmum");
-    const btnSubmit = document.getElementById("btnSubmit");
+    // Reset semua form setiap kali jenis berubah
+    wadahSubJenis.classList.add('d-none');
+    wadahFormTruk.classList.add('d-none');
+    wadahFormUmum.classList.add('d-none');
+    selectSubJenis.value = ""; 
+    document.getElementById('formTransaksi').reset();
+    this.value = jenis; // Kembalikan nilai jenis yang baru dipilih
 
-    // Reset status tampilan
-    divSubjenis.classList.add("d-none");
-    formTruk.classList.add("d-none");
-    formUmum.classList.add("d-none");
-    btnSubmit.disabled = true;
+    if (jenis === 'Pemasukan') {
+        wadahSubJenis.classList.remove('d-none');
+    } else if (jenis === 'Pengeluaran') {
+        wadahFormUmum.classList.remove('d-none');
+        document.getElementById('rincian').value = ""; // Dikosongkan untuk diketik manual
+    }
+});
 
-    if (jenis === "Pemasukan") {
-        divSubjenis.classList.remove("d-none");
-        formUmum.classList.remove("d-none");
-        btnSubmit.disabled = false;
+// Ketika "Kategori Pemasukan" diubah
+selectSubJenis.addEventListener('change', function() {
+    let subJenis = this.value;
+
+    if (subJenis === 'Truk Bayar') {
+        wadahFormTruk.classList.remove('d-none');
+        wadahFormUmum.classList.remove('d-none');
         
-        if (subjenis === "Truk Bayar") {
-            formTruk.classList.remove("d-none");
-            document.getElementById("rincian").value = "Pembayaran Truk"; // Default text
-        }
-    } else if (jenis === "Pengeluaran") {
-        formUmum.classList.remove("d-none");
-        btnSubmit.disabled = false;
-        document.getElementById("rincian").value = ""; 
+        // Auto-isi rincian agar petugas tidak repot ngetik
+        document.getElementById('rincian').value = "Pembayaran Truk (Rit)";
+        
+        // Buat input truk menjadi wajib diisi (required)
+        document.getElementById('nopol').required = true;
+        document.getElementById('material').required = true;
+        document.getElementById('pembayaran').required = true;
+    } 
+    else if (subJenis === 'Pemasukan Biasa') {
+        wadahFormTruk.classList.add('d-none');
+        wadahFormUmum.classList.remove('d-none');
+        
+        document.getElementById('rincian').value = ""; // Dikosongkan
+        
+        // Hapus wajib isi (required) pada form truk
+        document.getElementById('nopol').required = false;
+        document.getElementById('material').required = false;
+        document.getElementById('pembayaran').required = false;
+    } else {
+        wadahFormTruk.classList.add('d-none');
+        wadahFormUmum.classList.add('d-none');
     }
-}
+});
 
-// Menangani Submit
-document.getElementById("formTransaksi").addEventListener("submit", async function(e) {
-    e.preventDefault();
+// 2. MENGIRIM DATA KE SERVER SAAT DISIMPAN
+document.getElementById('formTransaksi').addEventListener('submit', async function(e) {
+    e.preventDefault(); // Mencegah halaman refresh
     
-    // Ambil user dari localStorage
-    const user = JSON.parse(localStorage.getItem("user_tambang") || '{"nama":"Anonim"}');
-    
-    // Siapkan Form Data
-    const formData = new FormData(this);
-    formData.append("action", "save_transaksi");
-    formData.append("user", user.nama);
+    const btnSimpan = document.getElementById('btnSimpan');
+    btnSimpan.innerHTML = "⏳ Sedang Menyimpan...";
+    btnSimpan.disabled = true;
 
-    // Validasi tambahan
-    if(formData.get("jenis") === "Pemasukan" && formData.get("subjenis") === "Truk Bayar") {
-        if(!formData.get("nopol") || !formData.get("sopir")) {
-            Swal.fire('Error', 'Nopol dan Sopir wajib diisi untuk transaksi truk!', 'error');
-            return;
-        }
+    // Ambil data User dari sistem login (SessionStorage)
+    let userData = sessionStorage.getItem('user');
+    let username = "Anonim";
+    if (userData) {
+        let user = JSON.parse(userData);
+        username = user.username;
     }
 
-    Swal.fire({ title: 'Menyimpan...', allowOutsideClick: false });
-    Swal.showLoading();
+    // Cek apakah ini transaksi truk
+    let isTruk = !wadahFormTruk.classList.contains('d-none');
+
+    // Susun data (Payload) yang akan dikirim ke Spreadsheet
+    const payload = {
+        jenis: document.getElementById('jenisTransaksi').value,
+        subjenis: selectJenis.value === 'Pemasukan' ? selectSubJenis.value : "-",
+        rincian: document.getElementById('rincian').value,
+        nominal: document.getElementById('nominal').value,
+        pj: document.getElementById('pj').value,
+        keterangan: document.getElementById('keterangan').value,
+        // Data truk (Jika bukan truk, otomatis isi tanda strip "-")
+        nopol: isTruk ? document.getElementById('nopol').value : "-",
+        sopir: isTruk ? document.getElementById('sopir').value : "-",
+        material: isTruk ? document.getElementById('material').value : "-",
+        pembayaran: isTruk ? document.getElementById('pembayaran').value : "-"
+    };
 
     try {
-        const response = await fetch(API_URL, { method: "POST", body: formData });
-        const result = await response.json();
+        const response = await fetch(URL_API, {
+            method: "POST",
+            body: JSON.stringify({ 
+                action: "save_transaction", 
+                payload: payload, 
+                user: username 
+            })
+        });
 
-        if (result.status === "success") {
-            Swal.fire('Berhasil!', result.message, 'success').then(() => {
-                this.reset();
-                toggleForm();
-            });
+        const data = await response.json();
+
+        if (data.status === "success") {
+            alert("✅ Transaksi Berhasil Disimpan!");
+            
+            // Reset form kembali seperti awal
+            this.reset();
+            wadahSubJenis.classList.add('d-none');
+            wadahFormTruk.classList.add('d-none');
+            wadahFormUmum.classList.add('d-none');
         } else {
-            Swal.fire('Gagal!', result.message, 'error');
+            alert("❌ Gagal menyimpan: " + data.message);
         }
     } catch (error) {
-        Swal.fire('Error!', 'Koneksi ke server gagal.', 'error');
+        console.error("Error:", error);
+        alert("❌ Terjadi kesalahan! Cek koneksi internet Anda.");
     }
+
+    // Kembalikan tombol ke keadaan semula
+    btnSimpan.innerHTML = "💾 Simpan Transaksi";
+    btnSimpan.disabled = false;
 });
