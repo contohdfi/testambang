@@ -9,6 +9,34 @@
 </head>
 <body class="bg-light">
 
+        <!-- NAVBAR SEDERHANA -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4 no-print">
+      <div class="container">
+        <a class="navbar-brand" href="dashboard.html">Tambang Jogosari</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav me-auto">
+            <li class="nav-item"><a class="nav-link" href="dashboard.html">Dashboard</a></li>
+            <li class="nav-item"><a class="nav-link" href="transaksi.html">Input Transaksi</a></li>
+            <li class="nav-item"><a class="nav-link" href="laporan.html">Lap. Harian</a></li>
+            <li class="nav-item"><a class="nav-link" href="rekap.html">Rekap Bulanan</a></li>
+            <li class="nav-item"><a class="nav-link" href="pengaturan.html">Pengaturan</a></li>
+          </ul>
+          <button class="btn btn-outline-light btn-sm" onclick="logout()">Logout</button>
+        </div>
+      </div>
+    </nav>
+    
+    <script>
+        // Fungsi logout standar yang dipasang di setiap halaman
+        function logout() {
+            sessionStorage.removeItem('user');
+            window.location.href = 'index.html';
+        }
+    </script>
+
     <div class="container mt-4">
         <h2 class="mb-4 text-secondary">Dashboard Harian (Hari Ini)</h2>
 
