@@ -1,0 +1,107 @@
+// Ganti URL ini dengan URL Web App Google Apps Script Anda
+const URL_API = "https://script.google.com/macros/s/GANTI_DENGAN_ID_DEPLOY_ANDA/exec";
+
+// Format ke Rupiah
+function formatRp(angka) {
+    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
+}
+
+// Fungsi utama menarik data
+async function tarikDataRekap(bulan, tahun) {
+    const btn = document.getElementById('btnTampilkan');
+    btn.innerHTML = "Memuat..."; btn.disabled = true;
+
+    try {
+        const respon = await fetch(URL_API, {
+            method: "POST",
+            body: JSON.stringify({ 
+                action: "get_monthly_recap", 
+                bulan: bulan, 
+                tahun: tahun 
+            })
+        });
+
+        const hasil = await respon.json();
+
+        if (hasil.status === "success") {
+            const data = hasil.data;
+
+            // 1. Update Label Cetak PDF
+            let namaBulan = document.getElementById("filterBulan").options[document.getElementById("filterBulan").selectedIndex].text;
+            document.getElementById("labelPeriodeLaporan").innerText = `Periode: Bulan ${namaBulan} Tahun ${tahun}`;
+
+            // 2. Update Ringkasan (Cards)
+            document.getElementById('rekPemasukan').innerText = formatRp(data.ringkasan.pemasukan);
+            document.getElementById('rekPengeluaran').innerText = formatRp(data.ringkasan.pengeluaran);
+            document.getElementById('rekSaldo').innerText = formatRp(data.ringkasan.saldo);
+            document.getElementById('rekRit').innerText = data.ringkasan.rit + " Rit";
+            document.getElementById('rekCash').innerText = formatRp(data.ringkasan.cash);
+            document.getElementById('rekTransfer').innerText = formatRp(data.ringkasan.transfer);
+            document.getElementById('rekBon').innerText = formatRp(data.ringkasan.bon);
+
+            // 3. Update Tabel Material
+            let htmlMaterial = "";
+            let objMaterial = data.material;
+            // Looping isi objek material
+            for (let mat in objMaterial) {
+                htmlMaterial += `
+                    <tr>
+                        <td class="fw-bold">${mat}</td>
+                        <td class="text-center">${objMaterial[mat].rit} Rit</td>
+                        <td class="text-end">${formatRp(objMaterial[mat].total)}</td>
+                    </tr>
+                `;
+            }
+            document.getElementById('tabelMaterial').innerHTML = htmlMaterial || `<tr><td colspan="3" class="text-center">Tidak ada aktivitas material di bulan ini.</td></tr>`;
+
+            // 4. Update Tabel Harian
+            let htmlHarian = "";
+            let objHarian = data.harian;
+            // Looping isi objek harian (diurutkan berdasarkan tanggal)
+            let urutanTanggal = Object.keys(objHarian).sort();
+            
+            urutanTanggal.forEach(tgl => {
+                let harian = objHarian[tgl];
+                let saldoHarian = harian.pemasukan - harian.pengeluaran;
+                htmlHarian += `
+                    <tr>
+                        <td>${tgl}</td>
+                        <td class="text-center">${harian.rit} Rit</td>
+                        <td class="text-end text-success">${formatRp(harian.pemasukan)}</td>
+                        <td class="text-end text-danger">${formatRp(harian.pengeluaran)}</td>
+                        <td class="text-end fw-bold">${formatRp(saldoHarian)}</td>
+                    </tr>
+                `;
+            });
+            document.getElementById('tabelHarian').innerHTML = htmlHarian || `<tr><td colspan="5" class="text-center">Tidak ada transaksi di bulan ini.</td></tr>`;
+
+        } else {
+            alert("Gagal memuat: " + hasil.message);
+        }
+    } catch (error) {
+        console.error("Error:", error);
+        alert("Gagal terhubung ke database.");
+    }
+
+    btn.innerHTML = "Tampilkan Data"; btn.disabled = false;
+}
+
+// Saat tombol "Tampilkan Data" diklik
+document.getElementById('formFilter').addEventListener('submit', function(e) {
+    e.preventDefault();
+    let bulan = document.getElementById('filterBulan').value;
+    let tahun = document.getElementById('filterTahun').value;
+    tarikDataRekap(bulan, tahun);
+});
+
+// Auto-load data saat pertama kali halaman dibuka (mengambil bulan saat ini)
+window.addEventListener('DOMContentLoaded', () => {
+    let now = new Date();
+    let bulanIni = (now.getMonth() + 1).toString().padStart(2, '0');
+    let tahunIni = now.getFullYear().toString();
+    
+    document.getElementById('filterBulan').value = bulanIni;
+    document.getElementById('filterTahun').value = tahunIni;
+    
+    tarikDataRekap(bulanIni, tahunIni);
+});
